@@ -5,12 +5,7 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-//accelerometer
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_Sensor.h>
-#include <Wire.h> 
 
-Adafruit_MPU6050 mpu;
 
 
 //button
@@ -28,47 +23,44 @@ bool switchState = false;
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 
 
+//Light sensor Light pin is using ANALOG
+const float GAMMA = 0.7;
+const float RL10 = 50;
+
+//coasters
+float coasterValue1;
+float coasterValue2;
+float coasterValue3;
+#define LDR_PIN 2
+
+
 void setup()
 {
   Serial.begin(115200);
+
+  //Send button
   pinMode(buttonPin, INPUT_PULLUP);
+
+  // beer tap
   pinMode(switchPin, INPUT_PULLUP);
+
+  //RFID card
   SPI.begin();      // Initiate  SPI bus
  // mfrc522.PCD_Init();   // Initiate MFRC522
   Serial.println("Approximate your card to the reader...");
-  /*
-  mpu.begin();
-    while (!mpu.begin()) {
-    Serial.println("MPU6050 not connected!");
-    delay(1000);
-  }
-  Serial.println("MPU6050 ready!");
-  */
+
 }
 
-sensors_event_t event;
+
 
 
 void loop()
 {
+
+
  // checkButton();
  //checkSwitchState();
  readCard();
-
-  /*
-      mpu.getAccelerometerSensor()->getEvent(&event);
-
-  Serial.print("[");
-  Serial.print(millis());
-  Serial.print("] X: ");
-  Serial.print(event.acceleration.x);
-  Serial.print(", Y: ");
-  Serial.print(event.acceleration.y);
-  Serial.print(", Z: ");
-  Serial.print(event.acceleration.z);
-  Serial.println(" m/s^2");
-  delay(500);
-*/
 
 }
 
@@ -112,24 +104,14 @@ void loop()
 } 
 
 
-void accelerometer()
+void checkLightCoaster(int pin, float coasterValue)
 {
-    mpu.getAccelerometerSensor()->getEvent(&event);
-
-  Serial.print("[");
-  Serial.print(millis());
-  Serial.print("] X: ");
-  Serial.print(event.acceleration.x);
-  Serial.print(", Y: ");
-  Serial.print(event.acceleration.y);
-  Serial.print(", Z: ");
-  Serial.print(event.acceleration.z);
-  Serial.println(" m/s^2");
-  delay(500);
-
-
+  int analogValue = analogRead(pin);
+  float voltage = analogValue / 1024. * 5;
+  float resistance = 2000 * voltage / (1 - voltage / 5);
+  float lux = pow(RL10 * 1e3 * pow(10, GAMMA) / resistance, (1 / GAMMA));
+  Serial.println(lux);
 }
-
 
 
   void checkButtonSubmitDrink()
