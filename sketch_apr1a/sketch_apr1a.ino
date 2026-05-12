@@ -56,12 +56,15 @@ void loop()
 {
 
 
-  // checkButton();
+  //checkButton();
   //checkSwitchState();
   readCard();
+
+  //coaster
   checkLightCoaster(A0,coasterValue1);
   checkLightCoaster(A1,coasterValue2);
   checkLightCoaster(A2,coasterValue3);
+
 }
 
 void readCard()
@@ -105,13 +108,22 @@ void readCard()
 } 
 
 
-void checkLightCoaster(int pin, float coasterValue)
+void checkLightCoaster(int pin, float &coasterValue)
 {
   int analogValue = analogRead(pin);
   float voltage = analogValue / 1024. * 5;
   float resistance = 2000 * voltage / (1 - voltage / 5);
   float lux = pow(RL10 * 1e3 * pow(10, GAMMA) / resistance, (1 / GAMMA));
   Serial.println(lux);
+}
+
+
+//will pass the data to the arduino
+void gatherData()
+{
+
+
+
 }
 
 
