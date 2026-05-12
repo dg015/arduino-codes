@@ -5,9 +5,6 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-
-
-
 //button
 const int buttonPin = 5;
 bool buttonState = false;
@@ -31,6 +28,8 @@ const float RL10 = 50;
 float coasterValue1;
 float coasterValue2;
 float coasterValue3;
+
+
 #define LDR_PIN 2
 
 
@@ -53,19 +52,20 @@ void setup()
 
 
 
-
 void loop()
 {
 
 
- // checkButton();
- //checkSwitchState();
- readCard();
-
+  // checkButton();
+  //checkSwitchState();
+  readCard();
+  checkLightCoaster(A0,coasterValue1);
+  checkLightCoaster(A1,coasterValue2);
+  checkLightCoaster(A2,coasterValue3);
 }
 
-  void readCard()
-  {
+void readCard()
+{
   // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) 
   {
@@ -82,10 +82,10 @@ void loop()
   byte letter;
   for (byte i = 0; i < mfrc522.uid.size; i++) 
   {
-     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-     Serial.print(mfrc522.uid.uidByte[i], HEX);
-     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-     content.concat(String(mfrc522.uid.uidByte[i], HEX));
+    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+    Serial.print(mfrc522.uid.uidByte[i], HEX);
+    content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+    content.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
   Serial.println();
   Serial.print("Message : ");
@@ -97,7 +97,8 @@ void loop()
     delay(3000);
   }
  
- else   {
+  else   
+  {
     Serial.println(" Access denied");
     delay(3000);
   }
@@ -114,36 +115,36 @@ void checkLightCoaster(int pin, float coasterValue)
 }
 
 
-  void checkButtonSubmitDrink()
+void checkButtonSubmitDrink()
+{
+
+  buttonState = digitalRead(buttonPin);
+  // NOT PRESSINGS
+  if(buttonState == HIGH)
   {
-
-    buttonState = digitalRead(buttonPin);
-   // NOT PRESSINGS
-    if(buttonState == HIGH)
-    {
-      Serial.println("pressed");
-    }
-    //PRESSING
-    else if (buttonState == LOW)
-    {
-      Serial.println("NOT pressed");
-    }
-
+    Serial.println("pressed");
+  }
+  //PRESSING
+  else if (buttonState == LOW)
+  {
+    Serial.println("NOT pressed");
   }
 
+}
 
-  void checkSwitchState()
+
+void checkSwitchState()
+{
+
+  switchState = digitalRead(switchPin);
+  // NOT PRESSINGS
+  if(switchState == HIGH)
   {
-
-    switchState = digitalRead(switchPin);
-    // NOT PRESSINGS
-    if(switchState == HIGH)
-    {
-      Serial.println("pressed");
-    }
-    //PRESSING
-    else if (switchState == LOW)
-    {
-      Serial.println("NOT pressed");
-    }
+    Serial.println("pressed");
   }
+  //PRESSING
+  else if (switchState == LOW)
+  {
+    Serial.println("NOT pressed");
+  }
+}
