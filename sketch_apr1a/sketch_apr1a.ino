@@ -41,6 +41,7 @@ float coasterValue3;
 #define out 7
 int   Red=0, Blue=0, Green=0;  //RGB values 
 
+String currentColour;
 
 void setup()
 {
@@ -85,60 +86,44 @@ void loop()
 
 void getColour()
 {
-  /*
-    digitalWrite(s2,LOW);        //S2/S3  levels define which set of photodiodes we are using LOW/LOW is for RED LOW/HIGH  is for Blue and HIGH/HIGH is for green
-   digitalWrite(s3,LOW);
-   Serial.print("Red  value= "); 
-   GetColourData();                   //Executing GetData function to  get the value
 
-   digitalWrite(s2,LOW);
-   digitalWrite(s3,HIGH);
-   Serial.print("Blue  value= ");
-   GetColourData();
-
-   digitalWrite(s2,HIGH);
-   digitalWrite(s3,HIGH);
-   Serial.print("Green value= ");
-   GetColourData();
-
-   Serial.println();
-
-   delay(2000);
-  */
     GetColors();                                     //Execute the GetColors function   to get the value of each RGB color
                                                    //Depending   of the RGB values given by the sensor we can define the color and displays it on   the monitor
 
   if (Red <=15 && Green <=15 && Blue <=15)         //If the values   are low it's likely the white color (all the colors are present)
+      {
+      currentColour = "White";
       Serial.println("White");                     
+      }
       
   else if (Red<Blue && Red<=Green && Red<23)      //if   Red value is the lowest one and smaller thant 23 it's likely Red
-      Serial.println("Red");
+      {
+        currentColour = "Red";
+        //Serial.println("Red");
+      }
 
    else if (Blue<Green && Blue<Red && Blue<20)    //Same thing for Blue
-      Serial.println("Blue");
+      {
+        currentColour = "Blue";
+        //Serial.println("Blue");
+      }
 
    else if (Green<Red && Green-Blue<= 8)           //Green it was a little tricky,   you can do it using the same method as above (the lowest), but here I used a reflective   object
-      Serial.println("Green");                    //which means the   blue value is very low too, so I decided to check the difference between green and   blue and see if it's acceptable
-
+      {
+        currentColour = "Green";
+        //Serial.println("Green");                    //which means the   blue value is very low too, so I decided to check the difference between green and   blue and see if it's acceptable
+      }
   else
-     Serial.println("Unknown");                   //if the color is not recognized, you can add as many as you want
-
+     {
+      currentColour = "Unknown";
+      //Serial.println("Unknown");                   //if the color is not recognized, you can add as many as you want
+     }
 
    delay(2000);                                   //2s delay you can modify if you   want
-  
 
 }
 
-/*
-void GetColourData(){
 
-   data=pulseIn(out,LOW);       //here  we wait until "out" go LOW, we start measuring the duration and stops when "out"  is HIGH again
-   Serial.print(data);          //it's a time duration measured,  which is related to frequency as the sensor gives a frequency depending on the color
-   Serial.print("\	");          //The higher the frequency the lower the duration
-   delay(20);
-
-}
-*/
 
 void GetColors()  
 {    
@@ -197,9 +182,6 @@ void readCard()
 
 void checkLightCoaster(int pin, float &coasterValue)
 {
-
-
-
   /*
     int analogValue = analogRead(pin);
   float voltage = analogValue / 1024. * 5;
@@ -211,17 +193,35 @@ void checkLightCoaster(int pin, float &coasterValue)
   float voltage = analogValue / 1024. * 5;
   float resistance = 2000 * voltage / (1 - voltage / 5);
   float lux = pow(RL10 * 1e3 * pow(10, GAMMA) / resistance, (1 / GAMMA));
-  Serial.println(lux);
+  coasterValue = lux;
+  //Serial.println(lux);
 
 
 }
 
-
+//MISSING COLOUR SENSOR
 //will pass the data to the arduino
 void gatherData()
 {
+  //data order COASTERS -> BUTTON -> SWITCH
+  Serial.print("DATA");
+  Serial.print(",");
 
+  //coaster data
+  Serial.print(coasterValue1);
+  Serial.print(",");
+  Serial.print(coasterValue2);
+  Serial.print(",");
+  Serial.print(coasterValue3);
+  Serial.print(",");
 
+  //button data
+  Serial.print(buttonState);
+  Serial.print(",");
+
+  // Switch data
+  Serial.print(switchState);
+  
 }
 
 
@@ -232,12 +232,12 @@ void checkButtonSubmitDrink()
   // NOT PRESSINGS
   if(buttonState == HIGH)
   {
-    Serial.println("pressed");
+    //Serial.println("pressed");
   }
   //PRESSING
   else if (buttonState == LOW)
   {
-    Serial.println("NOT pressed");
+    //Serial.println("NOT pressed");
   }
 
 }
@@ -250,11 +250,11 @@ void checkSwitchState()
   // NOT PRESSINGS
   if(switchState == HIGH)
   {
-    Serial.println("pressed");
+   // Serial.println("pressed");
   }
   //PRESSING
   else if (switchState == LOW)
   {
-    Serial.println("NOT pressed");
+    //Serial.println("NOT pressed");
   }
 }
