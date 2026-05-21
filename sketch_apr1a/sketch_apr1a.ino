@@ -203,7 +203,7 @@ void checkLightCoaster(int pin, float &coasterValue)
 //will pass the data to the arduino
 void gatherData()
 {
-  //data order COASTERS -> BUTTON -> SWITCH
+  //data order COASTERS -> BUTTON -> SWITCH -> colour
   Serial.print("DATA");
   Serial.print(",");
 
@@ -221,7 +221,8 @@ void gatherData()
 
   // Switch data
   Serial.print(switchState);
-  
+  Serial.print(",");
+  Serial.print(currentColour);
 }
 
 
