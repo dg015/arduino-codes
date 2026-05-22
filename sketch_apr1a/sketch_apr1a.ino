@@ -6,11 +6,11 @@
 #include <MFRC522.h>
 
 //button
-const int buttonPin = 5;
+const int buttonPin = 7;
 bool buttonState = false;
 
 //switch (tap)
-const int switchPin = 4;
+const int switchPin = 8;
 bool switchState = false;
 
 
@@ -19,7 +19,7 @@ bool switchState = false;
 #define RST_PIN 9
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 
-
+String cardUID = "";
 //Light sensor Light pin is using ANALOG
 const float GAMMA = 0.7;
 const float RL10 = 50;
@@ -32,16 +32,20 @@ float coasterValue3;
 
 #define LDR_PIN 2
 
-
+/*
 // colour detection
-#define s0 3
-#define s1 4
-#define s2 5
-#define s3 6
-#define out 7
+#define s0 8
+#define s1 9
+#define s2 10
+#define s3 11
+#define out 12
 int   Red=0, Blue=0, Green=0;  //RGB values 
 
+
+
 String currentColour;
+*/
+
 
 void setup()
 {
@@ -53,6 +57,7 @@ void setup()
   // beer tap
   pinMode(switchPin, INPUT_PULLUP);
 
+/*
   //colour detection pin setup
   pinMode(s0,OUTPUT);    
   pinMode(s1,OUTPUT);
@@ -61,6 +66,9 @@ void setup()
   pinMode(out,INPUT);
 
   digitalWrite(s0,HIGH);
+  digitalWrite(s1,LOW);
+
+*/
 
   //RFID card
   SPI.begin();      // Initiate  SPI bus
@@ -70,113 +78,100 @@ void setup()
 
 
 
+
+
 void loop()
 {
-  //checkButton();
-  //checkSwitchState();
-  //readCard();
+  checkButtonSubmitDrink();
+  checkSwitchState();
+  readCard();
 
   //coaster
-  //checkLightCoaster(A0,coasterValue1);
-  //checkLightCoaster(A1,coasterValue2);
-  //checkLightCoaster(A2,coasterValue3);
-  getColour();
-
+  checkLightCoaster(A0,coasterValue1);
+  checkLightCoaster(A1,coasterValue2);
+  checkLightCoaster(A2,coasterValue3);
+  //getColour();
+  gatherData();
 }
 
+/*
 void getColour()
 {
+GetColors();
 
-    GetColors();                                     //Execute the GetColors function   to get the value of each RGB color
-                                                   //Depending   of the RGB values given by the sensor we can define the color and displays it on   the monitor
+  Serial.print("R=");
+  Serial.print(Red);
+  Serial.print(" G=");
+  Serial.print(Green);
+  Serial.print(" B=");
+  Serial.println(Blue);
 
-  if (Red <=15 && Green <=15 && Blue <=15)         //If the values   are low it's likely the white color (all the colors are present)
-      {
-      currentColour = "White";
-      Serial.println("White");                     
-      }
-      
-  else if (Red<Blue && Red<=Green && Red<23)      //if   Red value is the lowest one and smaller thant 23 it's likely Red
-      {
-        currentColour = "Red";
-        //Serial.println("Red");
-      }
+  int threshold = 10; // noise tolerance
 
-   else if (Blue<Green && Blue<Red && Blue<20)    //Same thing for Blue
-      {
-        currentColour = "Blue";
-        //Serial.println("Blue");
-      }
-
-   else if (Green<Red && Green-Blue<= 8)           //Green it was a little tricky,   you can do it using the same method as above (the lowest), but here I used a reflective   object
-      {
-        currentColour = "Green";
-        //Serial.println("Green");                    //which means the   blue value is very low too, so I decided to check the difference between green and   blue and see if it's acceptable
-      }
+  // RED detection (Red is clearly lower than others)
+  if (Red < Green - threshold && Red < Blue - threshold)
+  {
+    currentColour = "Red";
+    Serial.println("Red");
+  }
+  // GREEN detection
+  else if (Green < Red - threshold && Green < Blue - threshold)
+  {
+    currentColour = "Green";
+    Serial.println("Green");
+  }
+  // BLUE detection
+  else if (Blue < Red - threshold && Blue < Green - threshold)
+  {
+    currentColour = "Blue";
+    Serial.println("Blue");
+  }
+  // everything else (white / unclear surface)
   else
-     {
-      currentColour = "Unknown";
-      //Serial.println("Unknown");                   //if the color is not recognized, you can add as many as you want
-     }
+  {
+    currentColour = "Unknown";
+    Serial.println("Unknown");
+  }
 
-   delay(2000);                                   //2s delay you can modify if you   want
-
+  delay(500);
 }
 
+*/
 
 
-void GetColors()  
-{    
-  digitalWrite(s2,   LOW);                                           //S2/S3 levels define which set   of photodiodes we are using LOW/LOW is for RED LOW/HIGH is for Blue and HIGH/HIGH   is for green 
-  digitalWrite(s3, LOW);                                           
-   Red = pulseIn(out, digitalRead(out) == HIGH ? LOW : HIGH);       //here we wait   until "out" go LOW, we start measuring the duration and stops when "out" is   HIGH again, if you have trouble with this expression check the bottom of the code
-   delay(20);  
-  digitalWrite(s3, HIGH);                                         //Here   we select the other color (set of photodiodes) and measure the other colors value   using the same techinque
-  Blue = pulseIn(out, digitalRead(out) == HIGH ? LOW   : HIGH);
-  delay(20);  
-  digitalWrite(s2, HIGH);  
-  Green = pulseIn(out,   digitalRead(out) == HIGH ? LOW : HIGH);
-  delay(20);  
-}
+
+
 
 void readCard()
 {
   // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) 
   {
+    cardUID = "";
     return;
   }
   // Select one of the cards
   if ( ! mfrc522.PICC_ReadCardSerial()) 
   {
+    cardUID = "";
     return;
   }
   //Show UID on serial monitor
-  Serial.print("UID tag :");
-  String content= "";
+  //Serial.print("UID tag :");
+  cardUID = "";
   byte letter;
   for (byte i = 0; i < mfrc522.uid.size; i++) 
   {
-    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    Serial.print(mfrc522.uid.uidByte[i], HEX);
-    content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-    content.concat(String(mfrc522.uid.uidByte[i], HEX));
+    //Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+    //Serial.print(mfrc522.uid.uidByte[i], HEX);
+    //content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+    //read the card and add in the strigs
+    cardUID += (String(mfrc522.uid.uidByte[i], HEX));
   }
-  Serial.println();
-  Serial.print("Message : ");
-  content.toUpperCase();
-  if (content.substring(1) == "BD 31 15 2B") //change here the UID of the card/cards that you want to give access
-  {
-    Serial.println("Authorized access");
-    Serial.println();
-    delay(3000);
-  }
- 
-  else   
-  {
-    Serial.println(" Access denied");
-    delay(3000);
-  }
+  //set content to uper case
+  cardUID.toUpperCase();
+  //Serial.println(cardUID);
+  
 } 
 
 
@@ -203,7 +198,7 @@ void checkLightCoaster(int pin, float &coasterValue)
 //will pass the data to the arduino
 void gatherData()
 {
-  //data order COASTERS -> BUTTON -> SWITCH -> colour
+  //data order COASTERS -> BUTTON -> SWITCH -> RFID
   Serial.print("DATA");
   Serial.print(",");
 
@@ -222,7 +217,8 @@ void gatherData()
   // Switch data
   Serial.print(switchState);
   Serial.print(",");
-  Serial.print(currentColour);
+  Serial.print(cardUID);
+  Serial.println();
 }
 
 
