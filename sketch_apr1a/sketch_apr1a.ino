@@ -24,6 +24,9 @@ String cardUID = "";
 const float GAMMA = 0.7;
 const float RL10 = 50;
 
+unsigned long lastCardRead = 0;
+const int cardTimeout = 500; // milliseconds
+
 //coasters
 float coasterValue1;
 float coasterValue2;
@@ -32,6 +35,10 @@ float coasterValue3;
 
 #define LDR_PIN 2
 
+// unity comunicaiton
+unsigned long lastSend = 0;
+const int sendInterval = 50; // 20Hz
+
 /*
 // colour detection
 #define s0 8
@@ -39,10 +46,7 @@ float coasterValue3;
 #define s2 10
 #define s3 11
 #define out 12
-int   Red=0, Blue=0, Green=0;  //RGB values 
-
-
-
+int   Red=0, Blue=0, Green=0;  //RGB values
 String currentColour;
 */
 
@@ -91,7 +95,12 @@ void loop()
   checkLightCoaster(A1,coasterValue2);
   checkLightCoaster(A2,coasterValue3);
   //getColour();
-  gatherData();
+
+    if (millis() - lastSend > sendInterval)
+  {
+    lastSend = millis();
+    gatherData();
+  }
 }
 
 /*
@@ -144,34 +153,37 @@ GetColors();
 
 void readCard()
 {
-  // Look for new cards
+    // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) 
   {
-    cardUID = "";
+    // clear only after timeout
+    if (millis() - lastCardRead > cardTimeout)
+    {
+      cardUID = "";
+    }
+
     return;
   }
+
   // Select one of the cards
   if ( ! mfrc522.PICC_ReadCardSerial()) 
   {
-    cardUID = "";
     return;
   }
+
+  // remember last successful read time
+  lastCardRead = millis();
+
   //Show UID on serial monitor
-  //Serial.print("UID tag :");
   cardUID = "";
-  byte letter;
+
   for (byte i = 0; i < mfrc522.uid.size; i++) 
   {
-    //Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    //Serial.print(mfrc522.uid.uidByte[i], HEX);
-    //content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-    //read the card and add in the strigs
-    cardUID += (String(mfrc522.uid.uidByte[i], HEX));
+    cardUID += String(mfrc522.uid.uidByte[i], HEX);
   }
-  //set content to uper case
+
+  //set content to upper case
   cardUID.toUpperCase();
-  //Serial.println(cardUID);
-  
 } 
 
 
@@ -199,15 +211,12 @@ void checkLightCoaster(int pin, float &coasterValue)
 void gatherData()
 {
   //data order COASTERS -> BUTTON -> SWITCH -> RFID
-  Serial.print("DATA");
-  Serial.print(",");
-
   //coaster data
-  Serial.print(coasterValue1);
+  Serial.print((int)coasterValue1);
   Serial.print(",");
-  Serial.print(coasterValue2);
+  Serial.print((int)coasterValue2);
   Serial.print(",");
-  Serial.print(coasterValue3);
+  Serial.print((int)coasterValue3);
   Serial.print(",");
 
   //button data
@@ -217,8 +226,11 @@ void gatherData()
   // Switch data
   Serial.print(switchState);
   Serial.print(",");
-  Serial.print(cardUID);
-  Serial.println();
+  
+  // just in case its null so it sends none
+  String safeUID = cardUID;
+  safeUID.replace(",", ""); 
+  Serial.println(safeUID.length() > 0 ? safeUID : "NONE");
 }
 
 
